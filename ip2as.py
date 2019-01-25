@@ -61,9 +61,9 @@ def read_prefixes(filename: str):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-p', '--prefixes', help='Regex for prefix-to-AS files in the standard CAIDA format.')
+    parser.add_argument('-p', '--prefixes', help='RIB prefix-to-AS file in the standard CAIDA format.')
     parser.add_argument('-P', '--peeringdb', help='PeeringDB json file.')
-    parser.add_argument('-r', '--rir', help='RIR extended delegation file regex.')
+    parser.add_argument('-r', '--rir', help='RIR prefix-to-AS file.')
     parser.add_argument('-R', '--rels', help='AS relationship file in the standard CAIDA format.')
     parser.add_argument('-c', '--cone', help='AS customer cone file in the standard CAIDA format.')
     parser.add_argument('-o', '--output', type=FileType('w'), default='-', help='Output file.')
