@@ -59,6 +59,8 @@ def read_prefixes(filename: str):
     try:
         with File2(filename) as f:
             for line in f:
+                if line[0] == '#':
+                    continue
                 prefix, asn_s = line.split()
                 prefixes.append((prefix, asn_s))
     except ValueError:
