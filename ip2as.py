@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 from traceutils.as2org.as2org import AS2Org
 from traceutils.bgp.bgp import BGP
+from traceutils.bgpreader.reader import valid
 from traceutils.file2.file2 import File2
 from traceutils.ixps.ixps import PeeringDB
 from traceutils.radix.ip2as import IP2AS
@@ -52,10 +53,28 @@ def determine_bgp(asn_s, as2org: AS2Org, bgp: BGP):
 
 def read_prefixes(filename: str):
     prefixes = []
-    with File2(filename) as f:
-        for line in f:
-            prefix, asn_s = line.split()
-            prefixes.append((prefix, asn_s))
+    try:
+        with File2(filename) as f:
+            for line in f:
+                prefix, asn_s = line.split()
+                prefixes.append((prefix, asn_s))
+    except ValueError:
+        with File2(filename) as f:
+            for line in f:
+                addr, prefixlen, asn_s = line.split()
+                asns = [asn for asn in map(int, asn_s.split('_')) if valid(asn)]
+                if not asns:
+                    continue
+                asn_s = '_'.join(str(asn) for asn in asns)
+                prefixlen = int(prefixlen)
+                if ':' in addr:
+                    if prefixlen > 48:
+                        continue
+                else:
+                    if prefixlen > 24:
+                        continue
+                prefix = '{}/{}'.format(addr, prefixlen)
+                prefixes.append((prefix, asn_s))
     return prefixes
 
 
