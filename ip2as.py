@@ -4,11 +4,14 @@ from typing import List, Tuple
 
 from traceutils.as2org.as2org import AS2Org
 from traceutils.bgp.bgp import BGP
-from traceutils.bgpreader.reader import valid
 from traceutils.file2.file2 import File2
 from traceutils.ixps.ixps import PeeringDB
 from traceutils.radix.ip2as import IP2AS
 from traceutils.utils.utils import max_num
+
+
+def valid(asn):
+    return asn != 23456 and 0 < asn < 64496 or 131071 < asn < 4200000000
 
 
 def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: List[Tuple[str, str]], bgp: BGP, as2org: AS2Org):
