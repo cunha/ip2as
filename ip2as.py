@@ -64,6 +64,8 @@ def read_prefixes(filename: str):
     except ValueError:
         with File2(filename) as f:
             for line in f:
+                if line[0] == '#':
+                    continue
                 addr, prefixlen, asn_s = line.split()
                 asns = [asn for asn in map(int, asn_s.split('_')) if valid(asn)]
                 if not asns:
