@@ -27,7 +27,10 @@ def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: Lis
     rir = [(prefix, asn_s) for prefix, asn_s in rir if not table.search_best_prefix(prefix)]
     for prefix, asn_s in rir:
         asns = list(map(int, asn_s.split('_')))
-        asn = max(asns, key=lambda x: (bgp.conesize[x], -x))
+        if len(asns) > 1:
+            asn = max(asns, key=lambda x: (bgp.conesize[x]))
+        else:
+            asn = asns[0]
         table.add(prefix, asn=asn)
     return table
 
@@ -48,9 +51,9 @@ def determine_bgp(asn_s, as2org: AS2Org, bgp: BGP):
     for asn in asns:
         if all(asn in bgp.cone[other] for other in asns if other != asn):
             return asn
-    mins = max_num(asns, key=lambda x: -bgp.conesize[x])
-    if mins:
-        return mins[0]
+    # mins = max_num(asns, key=lambda x: -bgp.conesize[x])
+    # if mins:
+    #     return mins[0]
     return asns[0]
 
 
