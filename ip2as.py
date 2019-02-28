@@ -11,7 +11,7 @@ from traceutils.utils.utils import max_num
 
 
 def valid(asn):
-    return asn != 23456 and 0 < asn < 64496 or 131071 < asn < 4200000000
+    return asn != 23456 and 0 < asn < 64496 or 131071 < asn < 400000
 
 
 def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: List[Tuple[str, str]], bgp: BGP, as2org: AS2Org):
@@ -40,7 +40,8 @@ def determine_bgp(asn_s, as2org: AS2Org, bgp: BGP):
     for asn in asn_s.split('_'):
         if asn[0] == '{':
             for asn in asn[1:-1].split(','):
-                asns.append(int(asn))
+                asn = int(asn)
+                asns.append(asn)
         else:
             asns.append(int(asn))
     if len(asns) == 1:
@@ -72,7 +73,17 @@ def read_prefixes(filename: str):
                 if line[0] == '#':
                     continue
                 addr, prefixlen, asn_s = line.split()
-                asns = [asn for asn in map(int, asn_s.split('_')) if valid(asn)]
+                asns = []
+                for asn in asn_s.split('_'):
+                    if asn.startswith('{'):
+                        for a in asn[1:-1].split(','):
+                            a = int(a)
+                            if valid(a):
+                                asns.append(a)
+                    else:
+                        asn = int(asn)
+                        if valid(asn):
+                            asns.append(asn)
                 if not asns:
                     continue
                 asn_s = '_'.join(str(asn) for asn in asns)
