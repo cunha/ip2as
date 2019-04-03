@@ -1,2 +1,2 @@
 # README
-Information is in the [wiki](https://github.com/alexmarder/ip2as/wiki).
+Information is in the [project documentation](https://alexmarder.github.io/ip2as/).
