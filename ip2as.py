@@ -88,6 +88,8 @@ def read_prefixes(filename: str):
                     continue
                 asn_s = '_'.join(str(asn) for asn in asns)
                 prefixlen = int(prefixlen)
+                if prefixlen < 8:
+                    continue
                 if ':' in addr:
                     if prefixlen > 48:
                         continue
