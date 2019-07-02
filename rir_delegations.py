@@ -17,6 +17,8 @@ def rirparse(filename):
             if len(splits) >= 8:
                 _, _, version, data, num, date, allocation, org = splits
                 if version == 'ipv4' or version == 'ipv6':
+                    if data == '2001:506:100::':
+                        print(data, num, org)
                     prefixes.append((data, int(num), org))
                 elif version == 'asn':
                     oasns[org].add(data)
@@ -39,18 +41,19 @@ def prefixlen_iter(num):
 
 
 def prefixes_iter(address, num):
-    if '.' in address:
+    if ':' not in address:
         fam = socket.AF_INET
+        b = socket.inet_pton(fam, address)
+        bitlen = len(b) * 8
+        ipnum = int.from_bytes(b, 'big')
+        for bits in prefixlen_iter(num):
+            network = socket.inet_ntop(fam, ipnum.to_bytes(len(b), 'big'))
+            prefixlen = bitlen - bits
+            yield network, prefixlen
+            ipnum += 2 ** bits
     else:
         fam = socket.AF_INET6
-    b = socket.inet_pton(fam, address)
-    bitlen = len(b) * 8
-    ipnum = int.from_bytes(b, 'big')
-    for bits in prefixlen_iter(num):
-        network = socket.inet_ntop(fam, ipnum.to_bytes(len(b), 'big'))
-        prefixlen = bitlen - bits
-        yield network, prefixlen
-        ipnum += 2**bits
+        yield address, num
 
 
 def main():
