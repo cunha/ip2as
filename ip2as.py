@@ -7,7 +7,6 @@ from traceutils.bgp.bgp import BGP
 from traceutils.file2.file2 import File2
 from traceutils.ixps.ixps import PeeringDB
 from traceutils.radix.ip2as import IP2AS
-from traceutils.utils.utils import max_num
 
 
 def valid(asn):
@@ -24,14 +23,15 @@ def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: Lis
     for prefix, asn_s in prefixes:
         asn = determine_bgp(asn_s, as2org, bgp)
         table.add(prefix, asn=asn)
-    rir = [(prefix, asn_s) for prefix, asn_s in rir if not table.search_best_prefix(prefix)]
-    for prefix, asn_s in rir:
-        asns = list(map(int, asn_s.split('_')))
-        if len(asns) > 1:
-            asn = max(asns, key=lambda x: (bgp.conesize[x]))
-        else:
-            asn = asns[0]
-        table.add(prefix, asn=asn)
+    if rir:
+        rir = [(prefix, asn_s) for prefix, asn_s in rir if not table.search_best_prefix(prefix)]
+        for prefix, asn_s in rir:
+            asns = list(map(int, asn_s.split('_')))
+            if len(asns) > 1:
+                asn = max(asns, key=lambda x: (bgp.conesize[x]))
+            else:
+                asn = asns[0]
+            table.add(prefix, asn=asn)
     return table
 
 
@@ -105,7 +105,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('-p', '--prefixes', required=True, help='RIB prefix-to-AS file in the standard CAIDA format.')
     parser.add_argument('-P', '--peeringdb', required=True, help='PeeringDB json file.')
-    parser.add_argument('-r', '--rir', required=True, help='RIR prefix-to-AS file.')
+    parser.add_argument('-r', '--rir', required=False, help='RIR prefix-to-AS file, optional but recommended to fill in missing prefixes.')
     parser.add_argument('-R', '--rels', required=True, help='AS relationship file in the standard CAIDA format.')
     parser.add_argument('-c', '--cone', required=True, help='AS customer cone file in the standard CAIDA format.')
     parser.add_argument('-o', '--output', type=FileType('w'), default='-', help='Output file.')
@@ -116,7 +116,7 @@ def main():
     bgp = BGP(args.rels, args.cone)
     as2org = AS2Org(args.as2org)
     prefixes = read_prefixes(args.prefixes)
-    rir = read_prefixes(args.rir)
+    rir = read_prefixes(args.rir) if args.rir else None
     table = create_table(prefixes, ixp, rir, bgp, as2org)
     for node in table.nodes():
         args.output.write('{} {}\n'.format(node.network, node.asn))
