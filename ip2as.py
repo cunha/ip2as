@@ -76,14 +76,16 @@ def read_prefixes(filename: str):
                 asns = []
                 for asn in asn_s.split('_'):
                     if asn.startswith('{'):
+                        asn = asn[1:-1]
+                    try:
+                        asn = int(asn)
+                        if valid(asn):
+                            asns.append(asn)
+                    except ValueError:
                         for a in asn[1:-1].split(','):
                             a = int(a)
                             if valid(a):
                                 asns.append(a)
-                    else:
-                        asn = int(asn)
-                        if valid(asn):
-                            asns.append(asn)
                 if not asns:
                     continue
                 asn_s = '_'.join(str(asn) for asn in asns)
@@ -113,7 +115,9 @@ def main():
     args = parser.parse_args()
 
     ixp = PeeringDB(args.peeringdb)
+    print('Created IXPs')
     bgp = BGP(args.rels, args.cone)
+    print('Created BGP')
     as2org = AS2Org(args.as2org)
     prefixes = read_prefixes(args.prefixes)
     rir = read_prefixes(args.rir) if args.rir else None
