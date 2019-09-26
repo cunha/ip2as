@@ -115,9 +115,7 @@ def main():
     args = parser.parse_args()
 
     ixp = PeeringDB(args.peeringdb)
-    print('Created IXPs')
     bgp = BGP(args.rels, args.cone)
-    print('Created BGP')
     as2org = AS2Org(args.as2org)
     prefixes = read_prefixes(args.prefixes)
     rir = read_prefixes(args.rir) if args.rir else None
