@@ -76,14 +76,16 @@ def read_prefixes(filename: str):
                 asns = []
                 for asn in asn_s.split('_'):
                     if asn.startswith('{'):
+                        asn = asn[1:-1]
+                    try:
+                        asn = int(asn)
+                        if valid(asn):
+                            asns.append(asn)
+                    except ValueError:
                         for a in asn[1:-1].split(','):
                             a = int(a)
                             if valid(a):
                                 asns.append(a)
-                    else:
-                        asn = int(asn)
-                        if valid(asn):
-                            asns.append(asn)
                 if not asns:
                     continue
                 asn_s = '_'.join(str(asn) for asn in asns)
