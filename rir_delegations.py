@@ -17,8 +17,8 @@ def rirparse(filename):
             if len(splits) >= 8:
                 _, _, version, data, num, date, allocation, org = splits
                 if version == 'ipv4' or version == 'ipv6':
-                    if data == '2001:506:100::':
-                        print(data, num, org)
+                    # if data == '2001:506:100::':
+                    #     print(data, num, org)
                     prefixes.append((data, int(num), org))
                 elif version == 'asn':
                     oasns[org].add(data)
