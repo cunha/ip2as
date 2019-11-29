@@ -16,9 +16,10 @@ def valid(asn):
 def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: List[Tuple[str, str]], bgp: BGP, as2org: AS2Org):
     table = IP2AS()
     table.add_private()
-    ixp_prefixes = [(prefix, asn) for prefix, asn in peeringdb.prefixes.items() if not table.search_best_prefix(prefix)]
-    for prefix, ixp_id in ixp_prefixes:
-        table.add(prefix, asn=(-100 - ixp_id))
+    if peeringdb:
+        ixp_prefixes = [(prefix, asn) for prefix, asn in peeringdb.prefixes.items() if not table.search_best_prefix(prefix)]
+        for prefix, ixp_id in ixp_prefixes:
+            table.add(prefix, asn=(-100 - ixp_id))
     prefixes = [(prefix, asn_s) for prefix, asn_s in prefixes if not table.search_best_prefix(prefix)]
     for prefix, asn_s in prefixes:
         asn = determine_bgp(asn_s, as2org, bgp)
@@ -93,10 +94,10 @@ def read_prefixes(filename: str):
                 if prefixlen < 8:
                     continue
                 if ':' in addr:
-                    if prefixlen > 48:
+                    if prefixlen > 64:
                         continue
                 else:
-                    if prefixlen > 24:
+                    if prefixlen > 29:
                         continue
                 prefix = '{}/{}'.format(addr, prefixlen)
                 prefixes.append((prefix, asn_s))
@@ -106,7 +107,7 @@ def read_prefixes(filename: str):
 def main():
     parser = ArgumentParser()
     parser.add_argument('-p', '--prefixes', required=True, help='RIB prefix-to-AS file in the standard CAIDA format.')
-    parser.add_argument('-P', '--peeringdb', required=True, help='PeeringDB json file.')
+    parser.add_argument('-P', '--peeringdb', required=False, help='PeeringDB json file. (recommended)')
     parser.add_argument('-r', '--rir', required=False, help='RIR prefix-to-AS file, optional but recommended to fill in missing prefixes.')
     parser.add_argument('-R', '--rels', required=True, help='AS relationship file in the standard CAIDA format.')
     parser.add_argument('-c', '--cone', required=True, help='AS customer cone file in the standard CAIDA format.')
@@ -114,7 +115,7 @@ def main():
     parser.add_argument('-a', '--as2org', required=True, help='AS-to-Org mappings in the standard CAIDA format.')
     args = parser.parse_args()
 
-    ixp = PeeringDB(args.peeringdb)
+    ixp = PeeringDB(args.peeringdb) if args.peeringdb else None
     bgp = BGP(args.rels, args.cone)
     as2org = AS2Org(args.as2org)
     prefixes = read_prefixes(args.prefixes)
