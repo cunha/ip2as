@@ -5,14 +5,14 @@ from typing import List, Tuple
 from traceutils.as2org.as2org import AS2Org
 from traceutils.bgp.bgp import BGP
 from traceutils.file2.file2 import File2
-from traceutils.ixps.ixps import PeeringDB
+from traceutils.ixps import AbstractPeeringDB, create_peeringdb
 from traceutils.radix.ip2as import IP2AS
 
 
 def valid(asn):
     return asn != 23456 and 0 < asn < 64496 or 131071 < asn < 400000
 
-def create_table(prefixes: List[Tuple[str, str]], peeringdb: PeeringDB, rir: List[Tuple[str, str]], bgp: BGP, as2org: AS2Org):
+def create_table(prefixes: List[Tuple[str, str]], peeringdb: AbstractPeeringDB, rir: List[Tuple[str, str]], bgp: BGP, as2org: AS2Org):
     table = IP2AS()
     table.add_private()
     ixp_prefixes = [(prefix, asn) for prefix, asn in peeringdb.prefixes.items() if not table.search_best_prefix(prefix)]
@@ -87,7 +87,7 @@ def read_prefixes(filename: str):
                     continue
                 asn_s = '_'.join(str(asn) for asn in asns)
                 prefixlen = int(prefixlen)
-                if prefixlen < 8:
+                if prefixlen <= 8:
                     continue
                 if ':' in addr:
                     if prefixlen > 48:
@@ -102,7 +102,7 @@ def read_prefixes(filename: str):
 def main():
     parser = ArgumentParser()
     parser.add_argument('-p', '--prefixes', required=True, help='RIB prefix-to-AS file in the standard CAIDA format.')
-    parser.add_argument('-P', '--peeringdb', required=True, help='PeeringDB json file.')
+    parser.add_argument('-P', '--peeringdb', required=True, help='PeeringDB json file or sqlite database.')
     parser.add_argument('-r', '--rir', required=False, help='RIR prefix-to-AS file, optional but recommended to fill in missing prefixes.')
     parser.add_argument('-R', '--rels', required=True, help='AS relationship file in the standard CAIDA format.')
     parser.add_argument('-c', '--cone', required=True, help='AS customer cone file in the standard CAIDA format.')
@@ -110,7 +110,7 @@ def main():
     parser.add_argument('-a', '--as2org', required=True, help='AS-to-Org mappings in the standard CAIDA format.')
     args = parser.parse_args()
 
-    ixp = PeeringDB(args.peeringdb)
+    ixp = create_peeringdb(args.peeringdb)
     bgp = BGP(args.rels, args.cone)
     as2org = AS2Org(args.as2org)
     prefixes = read_prefixes(args.prefixes)

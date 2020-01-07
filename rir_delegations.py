@@ -49,7 +49,8 @@ def prefixes_iter(address, num):
         for bits in prefixlen_iter(num):
             network = socket.inet_ntop(fam, ipnum.to_bytes(len(b), 'big'))
             prefixlen = bitlen - bits
-            yield network, prefixlen
+            if prefixlen > 8:
+                yield network, prefixlen
             ipnum += 2 ** bits
     else:
         fam = socket.AF_INET6
@@ -58,13 +59,18 @@ def prefixes_iter(address, num):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-f', '--files')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-f', '--files')
+    group.add_argument('-F', '--filelist', nargs='+')
     parser.add_argument('-r', '--rels')
     parser.add_argument('-c', '--cone')
     parser.add_argument('-o', '--output')
     args = parser.parse_args()
-    with File2(args.files) as f:
-        files = [line.strip() for line in f]
+    if args.files:
+        with File2(args.files) as f:
+            files = [line.strip() for line in f]
+    else:
+        files = args.filelist
     prefixes = defaultdict(set)
     pb = Progress(len(files), 'Parsing RIR delegations', callback=lambda: 'Prefixes {:,d}'.format(len(prefixes)))
     for filename in pb.iterator(files):
