@@ -7,7 +7,6 @@ from collections import defaultdict
 from traceutils.file2.file2 import File2
 from traceutils.progress.bar import Progress
 
-
 def rirparse(filename):
     oasns = defaultdict(set)
     prefixes = []
@@ -25,9 +24,11 @@ def rirparse(filename):
     for net, num, org in prefixes:
         asns = oasns[org]
         if asns:
-            for network, prefixlen in prefixes_iter(net, num):
-                yield network, prefixlen, asns
-
+            if ':' in net:
+                yield net, num, asns
+            else:
+                for network, prefixlen in prefixes_iter(net, num):
+                    yield network, prefixlen, asns
 
 def prefixlen_iter(num):
     while True:
@@ -38,7 +39,6 @@ def prefixlen_iter(num):
             break
         else:
             num -= 2**bits
-
 
 def prefixes_iter(address, num):
     if ':' not in address:
@@ -55,7 +55,6 @@ def prefixes_iter(address, num):
     else:
         fam = socket.AF_INET6
         yield address, num
-
 
 def main():
     parser = ArgumentParser()
@@ -78,7 +77,6 @@ def main():
             prefixes[network, prefixlen].update(asns)
     with open(args.output, 'w') as f:
         f.writelines('{}/{}\t{}\n'.format(network, prefixlen, '_'.join(asns)) for (network, prefixlen), asns in prefixes.items())
-
 
 if __name__ == '__main__':
     main()
