@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser, FileType
+import sys
+from argparse import ArgumentParser
 from typing import List, Tuple
 
-from traceutils.file2 import File2
-from traceutils.ixps.ixps import PeeringDB
-from traceutils.radix.ip2ases import IP2ASes
+from file2 import fopen
 
+from traceutils2.ixps.ixps import PeeringDB
+from traceutils2.radix.ip2ases import IP2ASes
 
 def valid(asn):
     return asn != 23456 and 0 < asn < 64496 or 131071 < asn < 400000
@@ -44,14 +45,14 @@ def determine_bgp(asn_s):
 def read_prefixes(filename: str):
     prefixes = []
     try:
-        with File2(filename) as f:
+        with fopen(filename) as f:
             for line in f:
                 if line[0] == '#':
                     continue
                 prefix, asn_s = line.split()
                 prefixes.append((prefix, asn_s))
     except ValueError:
-        with File2(filename, 'rt') as f:
+        with fopen(filename, 'rt') as f:
             for line in f:
                 if line[0] == '#':
                     continue
@@ -91,16 +92,19 @@ def main():
     parser.add_argument('-p', '--prefixes', required=True, help='RIB prefix-to-AS file in the standard CAIDA format.')
     parser.add_argument('-P', '--peeringdb', required=True, help='PeeringDB json file.')
     parser.add_argument('-r', '--rir', required=False, help='RIR prefix-to-AS file, optional but recommended to fill in missing prefixes.')
-    parser.add_argument('-o', '--output', type=FileType('w'), default='-', help='Output file.')
+    parser.add_argument('-o', '--output', default='-', help='Output file.')
     args = parser.parse_args()
 
     ixp = PeeringDB(args.peeringdb)
     prefixes = read_prefixes(args.prefixes)
     rir = read_prefixes(args.rir) if args.rir else None
     table = create_table(prefixes, ixp, rir)
-    for node in table.nodes():
-        args.output.write('{} {}\n'.format(node.network, ','.join(str(asns) for asns in node.asns)))
-
+    f = fopen(args.output, 'wt') if args.output != '-' else sys.stdout
+    try:
+        for node in table.nodes():
+            f.write('{} {}\n'.format(node.network, ','.join(str(asns) for asns in node.asns)))
+    finally:
+        f.close()
 
 if __name__ == '__main__':
     main()

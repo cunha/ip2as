@@ -4,9 +4,9 @@ from argparse import ArgumentParser, FileType
 from collections import Counter, defaultdict
 from multiprocessing.pool import Pool
 
-from traceutils.bgpreader.reader import read
-from traceutils.progress.bar import Progress
-
+from traceutils2.bgpreader.reader import read
+# from traceutils.progress.bar import Progress
+from pb_amarder import Progress
 
 def extract_prefixes(filenames, processes):
     counter = Counter()

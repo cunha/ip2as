@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser, FileType
 
-from traceutils.ixps import create_peeringdb, AbstractPeeringDB
-from traceutils.radix.ip2as import IP2AS
+from traceutils2.ixps import create_peeringdb, AbstractPeeringDB
+from traceutils2.radix.ip2as import IP2AS
 
 def create_table(peeringdb: AbstractPeeringDB):
     table = IP2AS()

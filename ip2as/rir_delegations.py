@@ -4,13 +4,13 @@ import socket
 from argparse import ArgumentParser
 from collections import defaultdict
 
-from traceutils.file2.file2 import File2
-from traceutils.progress.bar import Progress
+from file2 import fopen
+from pb_amarder import Progress
 
 def rirparse(filename):
     oasns = defaultdict(set)
     prefixes = []
-    with File2(filename) as f:
+    with fopen(filename) as f:
         for line in f:
             splits = line.strip().split('|')
             if len(splits) >= 8:
@@ -66,7 +66,7 @@ def main():
     parser.add_argument('-o', '--output')
     args = parser.parse_args()
     if args.files:
-        with File2(args.files) as f:
+        with fopen(args.files) as f:
             files = [line.strip() for line in f]
     else:
         files = args.filelist
@@ -75,7 +75,7 @@ def main():
     for filename in pb.iterator(files):
         for network, prefixlen, asns in rirparse(filename):
             prefixes[network, prefixlen].update(asns)
-    with open(args.output, 'w') as f:
+    with fopen(args.output, 'wt') as f:
         f.writelines('{}/{}\t{}\n'.format(network, prefixlen, '_'.join(asns)) for (network, prefixlen), asns in prefixes.items())
 
 if __name__ == '__main__':
